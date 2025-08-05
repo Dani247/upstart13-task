@@ -20,6 +20,8 @@ export interface IForecast {
     detailedForecast: string;
 }
 
+export type IGroupedForecast = { [key: string]: Array<IForecast> }
+
 const getCoordinates = async (address: string): Promise<{ lat: number, lng: number }> => {
     const url = new URL(`https://geocoding.geo.census.gov/geocoder/locations/onelineaddress`);
     url.searchParams.set('address', address)
@@ -50,6 +52,10 @@ const getForecastUrl = async ({ lat, lng }: { lat: number, lng: number }) => {
     return pointData.properties.forecast;
 }
 
+const sortByDate = (forecasts: Array<IForecast>) => {
+    return forecasts.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+}
+
 const getForecastFromUrl = async (url: string): Promise<Array<IForecast>> => {
     const res = await fetch(url);
     const forecastData = await res.json();
@@ -58,6 +64,23 @@ const getForecastFromUrl = async (url: string): Promise<Array<IForecast>> => {
     }
 
     return forecastData?.properties?.periods;
+}
+
+const groupByDay = (forecasts: Array<IForecast>): IGroupedForecast => {
+    const grouped: IGroupedForecast = {};
+
+    forecasts.forEach(forecast => {
+        const date = new Date(forecast.startTime);
+        const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+        if (!grouped[dayKey]) {
+            grouped[dayKey] = [];
+        }
+
+        grouped[dayKey].push(forecast);
+    });
+
+    return grouped;
 }
 
 export async function POST(request: NextRequest) {
@@ -70,9 +93,11 @@ export async function POST(request: NextRequest) {
 
         const { lat, lng } = await getCoordinates(address);
         const forecastUrl = await getForecastUrl({ lat, lng });
-        const forecast = await getForecastFromUrl(forecastUrl);
+        const forecasts = await getForecastFromUrl(forecastUrl);
+        const sorted = sortByDate(forecasts)
+        const grouped = groupByDay(sorted);
 
-        return NextResponse.json(forecast)
+        return NextResponse.json(grouped)
     } catch (error) {
         console.log("error", error)
         return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
