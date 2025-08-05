@@ -17,8 +17,8 @@ export default function Home() {
     e.preventDefault();
 
     if (loading) return;
-    // @ts-expect-error
-    const address = e?.target['address']?.value?.trim()
+
+    const address = (e.target as HTMLFormElement).address?.value?.trim()
 
     if (!address) return;
 
