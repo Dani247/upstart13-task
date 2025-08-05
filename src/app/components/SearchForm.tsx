@@ -1,0 +1,30 @@
+import { FormEvent } from "react";
+
+interface IProps {
+    onSubmit: (e: FormEvent<HTMLFormElement>) => void
+}
+
+function SearchForm({ onSubmit }: IProps) {
+    return <form onSubmit={onSubmit} className="flex justify-center p-10">
+        <label className="input w-100">
+            <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <g
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeWidth="2.5"
+                    fill="none"
+                    stroke="currentColor"
+                >
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </g>
+            </svg>
+            <input defaultValue={'1600 Pennsylvania Avenue NW, Washington, DC 20500'} name="address" type="search" className="grow" placeholder="1600 Pennsylvania Avenue NW, Washington, DC 20500" />
+            <kbd className="kbd kbd-sm">Enter</kbd>
+        </label>
+
+        <button type="submit" className="btn btn-soft">Search</button>
+    </form>
+}
+
+export default SearchForm;
