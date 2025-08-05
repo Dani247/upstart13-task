@@ -19,7 +19,7 @@ function SearchForm({ onSubmit }: IProps) {
                     <path d="m21 21-4.3-4.3"></path>
                 </g>
             </svg>
-            <input defaultValue={'1600 Pennsylvania Avenue NW, Washington, DC 20500'} name="address" type="search" className="grow" placeholder="1600 Pennsylvania Avenue NW, Washington, DC 20500" />
+            <input name="address" type="search" className="grow" placeholder="123 Main St, New York, NY" />
             <kbd className="kbd kbd-sm">Enter</kbd>
         </label>
 

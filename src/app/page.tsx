@@ -8,38 +8,59 @@ import LoadingSpinner from "./components/LoadingSpinner";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [forecasts, setForecasts] = useState<IGroupedForecast>({});
   const signal = useRef<AbortController>(null)
   signal.current = new AbortController()
 
+  const fetchForecast = async (address: string) => {
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+    setForecasts({});
+
+    try {
+      const body = JSON.stringify({ address });
+      const res = await fetch('/api/forecast', {
+        method: "POST",
+        body,
+        signal: signal?.current?.signal
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const errorMessage = data.error || "An error occurred";
+        setError(errorMessage);
+        return;
+      }
+
+      if (!data || Object.keys(data).length === 0) {
+        setError("No forecast data available for this location");
+        return;
+      }
+
+      setForecasts(data);
+    } catch (error) {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (loading) return;
+    const address = (e.target as HTMLFormElement).address?.value?.trim();
 
-    const address = (e.target as HTMLFormElement).address?.value?.trim()
-
-    if (!address) return;
-
-    setLoading(true);
-    setError("")
-    try {
-      const body = JSON.stringify({ address })
-      const res = await fetch('/api/forecast', { method: "POST", body, signal: signal?.current?.signal });
-      const foreCastData = await res.json()
-      if (!foreCastData) {
-        setError("Could not find that address")
-        return;
-      }
-      setForecasts(foreCastData);
-    } catch (error) {
-      console.error(error)
-      setError("Error")
-    } finally {
-      setLoading(false)
+    if (!address) {
+      setError("Please enter an address");
+      return;
     }
-  }
+
+    await fetchForecast(address);
+  };
 
   useEffect(() => {
     return () => {
@@ -50,8 +71,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-brp-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mt-8">
           <h1 className="text-4xl font-boldmb-2">Weather Forecast</h1>
+          <p>Enter a U.S. address to get the weather forecast</p>
         </div>
 
         <SearchForm onSubmit={onSubmit} />
